@@ -1,0 +1,82 @@
+ public class Process {
+      private int id;
+      private String name;
+      private int priority; // Lower number means higher priority
+      private int burstTime; // Total execution time needed
+      private int remainingTime; // Remaining execution time
+      private int arrivalTime; // Time when process arrives in the system
+      private ProcessState state;
+
+      public enum ProcessState {
+          NEW, READY, RUNNING, WAITING, TERMINATED
+      }
+
+      public Process(int id, String name, int priority, int burstTime, int arrivalTime) {
+          this.id = id;
+          this.name = name;
+          this.priority = priority;
+          this.burstTime = burstTime;
+          this.remainingTime = burstTime;
+          this.arrivalTime = arrivalTime;
+          this.state = ProcessState.NEW;
+      }
+
+      // Getters and setters
+      public int getId() {
+          return id;
+      }
+
+      public String getName() {
+          return name;
+      }
+
+      public int getPriority() {
+          return priority;
+      }
+
+      public int getBurstTime() {
+          return burstTime;
+      }
+
+      public int getRemainingTime() {
+          return remainingTime;
+      }
+
+      public void setRemainingTime(int remainingTime) {
+          this.remainingTime = remainingTime;
+      }
+
+      public int getArrivalTime() {
+          return arrivalTime;
+      }
+
+      public ProcessState getState() {
+          return state;
+      }
+
+      public void setState(ProcessState state) {
+          this.state = state;
+      }
+
+      public void execute(int timeQuantum) {
+          int executionTime = Math.min(timeQuantum, remainingTime);
+          remainingTime -= executionTime;
+      }
+
+      public boolean isCompleted() {
+          return remainingTime <= 0;
+      }
+
+      @Override
+      public String toString() {
+          return "Processo{" +
+                  "id=" + id +
+                  ", nome='" + name + '\'' +
+                  ", prioridade=" + priority +
+                  ", tempoTotal=" + burstTime +
+                  ", tempoRestante=" + remainingTime +
+                  ", tempoChegada=" + arrivalTime +
+                  ", estado=" + state +
+                  '}';
+      }
+  }
