@@ -1,14 +1,14 @@
  public class Process {
       private int id;
       private String name;
-      private int priority; // Lower number means higher priority
-      private int burstTime; // Total execution time needed
-      private int remainingTime; // Remaining execution time
-      private int arrivalTime; // Time when process arrives in the system
+      private int priority; // Número menor significa maior prioridade
+      private int burstTime; // Tempo total de execução necessário
+      private int remainingTime; // Tempo de execução restante
+      private int arrivalTime; // Tempo quando o processo chega no sistema
       private ProcessState state;
 
       public enum ProcessState {
-          NEW, READY, RUNNING, WAITING, TERMINATED
+          NOVO, PRONTO, PROCESSANDO, ESPERANDO, TERMINADO
       }
 
       public Process(int id, String name, int priority, int burstTime, int arrivalTime) {
@@ -18,10 +18,10 @@
           this.burstTime = burstTime;
           this.remainingTime = burstTime;
           this.arrivalTime = arrivalTime;
-          this.state = ProcessState.NEW;
+          this.state = ProcessState.NOVO;
       }
 
-      // Getters and setters
+      // Getters e setters
       public int getId() {
           return id;
       }
@@ -58,8 +58,8 @@
           this.state = state;
       }
 
-      public void execute(int timeQuantum) {
-          int executionTime = Math.min(timeQuantum, remainingTime);
+      public void execute(int timeSlice) {
+          int executionTime = Math.min(timeSlice, remainingTime);
           remainingTime -= executionTime;
       }
 

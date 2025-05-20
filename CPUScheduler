@@ -107,7 +107,7 @@ public class CPUScheduler {
         }
     }
 
-    public void simulate(int timeQuantum, int simulationSpeed) {
+    public void simulate(int timeSlice, int simulationSpeed) {
         System.out.println("\n===== SIMULAÇÃO DE ESCALONADOR DE PRIORIDADE PREEMPTIVO =====");
         System.out.println("Nota: Números MAIORES de prioridade indicam maior prioridade\n");
 
@@ -121,9 +121,9 @@ public class CPUScheduler {
             // Se nenhum processo está em execução, agenda o próximo
             scheduleNextProcess();
 
-            // Executa o processo em execução pelo quantum de tempo
+            // Executa o processo em execução pelo time slice
             if (runningProcess != null) {
-                int executionTime = Math.min(timeQuantum, runningProcess.getRemainingTime());
+                int executionTime = Math.min(timeSlice, runningProcess.getRemainingTime());
 
                 addEvent(new SchedulingEvent(currentTime,
                         "Processo " + runningProcess.getName() +
@@ -131,7 +131,7 @@ public class CPUScheduler {
                         runningProcess.getRemainingTime() + " unidades",
                         "EXECUTANDO"));
 
-                runningProcess.execute(executionTime);
+                runningProcess.execute(timeSlice);
 
                 // Simula o tempo de processamento com atraso visual
                 try {
@@ -159,7 +159,7 @@ public class CPUScheduler {
             }
 
             // Incrementa o tempo
-            currentTime += timeQuantum;
+            currentTime += timeSlice;
 
             // Imprime separador para melhor legibilidade
             System.out.println("----------------------------------------");

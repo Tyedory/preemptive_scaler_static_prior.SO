@@ -36,7 +36,7 @@ public class PreemptiveSchedulerSimulation {
             e.printStackTrace();
         }
 
-        // Executa a simulação com quantum de tempo e velocidade de simulação (em milissegundos)
-        scheduler.simulate(1, 5000); // Quantum de tempo de 1, atraso de 5s para visualização
+        // Executa a simulação com time slice e velocidade de simulação (em milissegundos)
+        scheduler.simulate(1, 5000); // Time slice de 1, atraso de 5s para visualização
     }
 }
