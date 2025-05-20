@@ -1,45 +1,202 @@
-import java.util.Random;
+import java.util.ArrayList;
+  import java.util.Comparator;
+  import java.util.List;
+  import java.util.stream.Collectors;
 
-  public class PreemptiveSchedulerSimulation {
-      public static void main(String[] args) {
-          // Create CPU Scheduler
-          CPUScheduler scheduler = new CPUScheduler();
-          Random random = new Random();
+  public class CPUScheduler {
+      private List<Process> processes;
+      private List<Process> readyQueue;
+      private Process runningProcess;
+      private int currentTime;
+      private List<SchedulingEvent> events;
 
-          System.out.println("===== SIMULADOR DE ESCALONAMENTO PREEMPTIVO COM PRIORIDADE ESTÁTICA =====");
+      public CPUScheduler() {
+          this.processes = new ArrayList<>();
+          this.readyQueue = new ArrayList<>();
+          this.runningProcess = null;
+          this.currentTime = 0;
+          this.events = new ArrayList<>();
+      }
+
+      public void addProcess(Process process) {
+          processes.add(process);
+          addEvent(new SchedulingEvent(currentTime, "Processo " + process.getName() + " criado e adicionado ao sistema", "NOVO"));
+      }
+
+      private Process findHighestPriorityProcess() {
+          if (readyQueue.isEmpty()) {
+              return null;
+          }
+
+          // Sort by priority (lower number means higher priority)
+          readyQueue.sort(Comparator.comparingInt(Process::getPriority));
+          return readyQueue.get(0);
+      }
+
+      private void checkForNewArrivals() {
+          List<Process> newArrivals = processes.stream()
+                  .filter(p -> p.getArrivalTime() <= currentTime && p.getState() == Process.ProcessState.NEW)
+                  .collect(Collectors.toList());
+
+          for (Process process : newArrivals) {
+              process.setState(Process.ProcessState.READY);
+              readyQueue.add(process);
+              addEvent(new SchedulingEvent(currentTime,
+                      "Processo " + process.getName() + " chegou e está pronto para execução",
+                      "PRONTO"));
+          }
+      }
+
+      private void preemptIfNecessary() {
+          Process highestPriorityProcess = findHighestPriorityProcess();
+
+          if (runningProcess != null && highestPriorityProcess != null) {
+              if (highestPriorityProcess.getPriority() < runningProcess.getPriority()) {
+                  // Preemption occurs - higher priority process found
+                  runningProcess.setState(Process.ProcessState.READY);
+                  readyQueue.add(runningProcess);
+                  addEvent(new SchedulingEvent(currentTime,
+                          "Processo " + runningProcess.getName() +
+                          " foi interrompido pelo Processo " + highestPriorityProcess.getName() +
+                          " (Prioridade: " + highestPriorityProcess.getPriority() + " vs " +
+                          runningProcess.getPriority() + ")",
+                          "INTERROMPIDO"));
+
+                  // Start execution of the higher priority process
+                  runningProcess = highestPriorityProcess;
+                  readyQueue.remove(highestPriorityProcess);
+                  runningProcess.setState(Process.ProcessState.RUNNING);
+                  addEvent(new SchedulingEvent(currentTime,
+                          "Processo " + runningProcess.getName() +
+                          " começa execução com prioridade " + runningProcess.getPriority(),
+                          "EXECUTANDO"));
+              }
+          }
+      }
+
+      private void scheduleNextProcess() {
+          if (runningProcess == null) {
+              Process nextProcess = findHighestPriorityProcess();
+              if (nextProcess != null) {
+                  runningProcess = nextProcess;
+                  readyQueue.remove(nextProcess);
+                  runningProcess.setState(Process.ProcessState.RUNNING);
+                  addEvent(new SchedulingEvent(currentTime,
+                          "Processo " + runningProcess.getName() +
+                          " começa execução com prioridade " + runningProcess.getPriority(),
+                          "EXECUTANDO"));
+              }
+          }
+      }
+
+      private boolean allProcessesCompleted() {
+          return processes.stream().allMatch(Process::isCompleted);
+      }
+
+      private void addEvent(SchedulingEvent event) {
+          events.add(event);
+          // Print event immediately for real-time observation
+          System.out.println(event);
+
+          // Add a small delay after printing
+          try {
+              Thread.sleep(50);
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+      }
+
+      public void simulate(int timeQuantum, int simulationSpeed) {
+          System.out.println("\n===== SIMULAÇÃO DE ESCALONADOR DE PRIORIDADE PREEMPTIVO =====");
           System.out.println("Nota: Números menores de prioridade indicam maior prioridade\n");
 
-          // Create processes with different priorities and burst times
-          System.out.println("Criando processos com diferentes prioridades...");
+          while (!allProcessesCompleted()) {
+              // Check for new processes arriving at this time
+              checkForNewArrivals();
 
-          try {
-              Thread.sleep(1000); // Pause a bit for better visualization
-          } catch (InterruptedException e) {
-              e.printStackTrace();
+              // Perform preemption if necessary
+              preemptIfNecessary();
+
+              // If no process is running, schedule the next one
+              scheduleNextProcess();
+
+              // Execute the running process for the time quantum
+              if (runningProcess != null) {
+                  int executionTime = Math.min(timeQuantum, runningProcess.getRemainingTime());
+
+                  addEvent(new SchedulingEvent(currentTime,
+                          "Processo " + runningProcess.getName() +
+                          " está executando por " + executionTime + " unidades de tempo. Restante: " +
+                          runningProcess.getRemainingTime() + " unidades",
+                          "EXECUTANDO"));
+
+                  runningProcess.execute(executionTime);
+
+                  // Simulate actual processing time with visual delay
+                  try {
+                      Thread.sleep(simulationSpeed);
+                  } catch (InterruptedException e) {
+                      e.printStackTrace();
+                  }
+
+                  // Check if process has completed its execution
+                  if (runningProcess.isCompleted()) {
+                      addEvent(new SchedulingEvent(currentTime + executionTime,
+                              "Processo " + runningProcess.getName() + " completou sua execução",
+                              "FINALIZADO"));
+                      runningProcess.setState(Process.ProcessState.TERMINATED);
+                      runningProcess = null;
+                  }
+              } else {
+                  // If no process is running, just wait a bit and check again
+                  System.out.println("Tempo " + currentTime + ": CPU ociosa - aguardando processos...");
+                  try {
+                      Thread.sleep(simulationSpeed);
+                  } catch (InterruptedException e) {
+                      e.printStackTrace();
+                  }
+              }
+
+              // Increment time
+              currentTime += timeQuantum;
+
+              // Print a separator for better readability
+              System.out.println("----------------------------------------");
           }
 
-          // Process creation - 10 processes with different arrival times, priorities, and burst times
-          scheduler.addProcess(new Process(1, "P1", 3, 10, 0));  // Priority 3, Burst time 10, Arrival at time 0
-          scheduler.addProcess(new Process(2, "P2", 1, 6, 2));   // Priority 1, Burst time 6, Arrival at time 2
-          scheduler.addProcess(new Process(3, "P3", 4, 8, 4));   // Priority 4, Burst time 8, Arrival at time 4
-          scheduler.addProcess(new Process(4, "P4", 2, 9, 6));   // Priority 2, Burst time 9, Arrival at time 6
-          scheduler.addProcess(new Process(5, "P5", 5, 5, 8));   // Priority 5, Burst time 5, Arrival at time 8
-          scheduler.addProcess(new Process(6, "P6", 2, 7, 10));  // Priority 2, Burst time 7, Arrival at time 10
-          scheduler.addProcess(new Process(7, "P7", 3, 4, 12));  // Priority 3, Burst time 4, Arrival at time 12
-          scheduler.addProcess(new Process(8, "P8", 1, 10, 14)); // Priority 1, Burst time 10, Arrival at time 14
-          scheduler.addProcess(new Process(9, "P9", 4, 6, 16));  // Priority 4, Burst time 6, Arrival at time 16
-          scheduler.addProcess(new Process(10, "P10", 2, 5, 18)); // Priority 2, Burst time 5, Arrival at time 18
+          System.out.println("\n===== SIMULAÇÃO COMPLETA =====");
+      }
 
-          System.out.println("10 Processos criados com sucesso.\n");
-          System.out.println("Iniciando simulação com velocidade lenta para melhor observação...\n");
+      public List<SchedulingEvent> getEvents() {
+          return events;
+      }
 
-          try {
-              Thread.sleep(2000); // Pause before starting simulation
-          } catch (InterruptedException e) {
-              e.printStackTrace();
+      public static class SchedulingEvent {
+          private int time;
+          private String description;
+          private String state;
+
+          public SchedulingEvent(int time, String description, String state) {
+              this.time = time;
+              this.description = description;
+              this.state = state;
           }
 
-          // Run simulation with time quantum and simulation speed (in milliseconds)
-          scheduler.simulate(1, 500); // Time quantum of 1, 500ms delay for visualization
+          public int getTime() {
+              return time;
+          }
+
+          public String getDescription() {
+              return description;
+          }
+
+          public String getState() {
+              return state;
+          }
+
+          @Override
+          public String toString() {
+              return "Tempo " + time + " [" + state + "]: " + description;
+          }
       }
   }
