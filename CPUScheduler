@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+ import java.util.ArrayList;
   import java.util.Comparator;
   import java.util.List;
   import java.util.stream.Collectors;
@@ -28,8 +28,8 @@ import java.util.ArrayList;
               return null;
           }
 
-          // Sort by priority (lower number means higher priority)
-          readyQueue.sort(Comparator.comparingInt(Process::getPriority));
+          // Sort by priority (HIGHER number means higher priority) - Reversed logic
+          readyQueue.sort(Comparator.comparingInt(Process::getPriority).reversed());
           return readyQueue.get(0);
       }
 
@@ -51,7 +51,8 @@ import java.util.ArrayList;
           Process highestPriorityProcess = findHighestPriorityProcess();
 
           if (runningProcess != null && highestPriorityProcess != null) {
-              if (highestPriorityProcess.getPriority() < runningProcess.getPriority()) {
+              // Reversed logic: HIGHER number means higher priority
+              if (highestPriorityProcess.getPriority() > runningProcess.getPriority()) {
                   // Preemption occurs - higher priority process found
                   runningProcess.setState(Process.ProcessState.READY);
                   readyQueue.add(runningProcess);
@@ -108,7 +109,7 @@ import java.util.ArrayList;
 
       public void simulate(int timeQuantum, int simulationSpeed) {
           System.out.println("\n===== SIMULAÇÃO DE ESCALONADOR DE PRIORIDADE PREEMPTIVO =====");
-          System.out.println("Nota: Números menores de prioridade indicam maior prioridade\n");
+          System.out.println("Nota: Números MAIORES de prioridade indicam maior prioridade\n");
 
           while (!allProcessesCompleted()) {
               // Check for new processes arriving at this time
