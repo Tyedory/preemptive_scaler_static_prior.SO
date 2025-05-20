@@ -1,0 +1,45 @@
+import java.util.Random;
+
+  public class PreemptiveSchedulerSimulation {
+      public static void main(String[] args) {
+          // Create CPU Scheduler
+          CPUScheduler scheduler = new CPUScheduler();
+          Random random = new Random();
+
+          System.out.println("===== SIMULADOR DE ESCALONAMENTO PREEMPTIVO COM PRIORIDADE ESTÁTICA =====");
+          System.out.println("Nota: Números menores de prioridade indicam maior prioridade\n");
+
+          // Create processes with different priorities and burst times
+          System.out.println("Criando processos com diferentes prioridades...");
+
+          try {
+              Thread.sleep(1000); // Pause a bit for better visualization
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+
+          // Process creation - 10 processes with different arrival times, priorities, and burst times
+          scheduler.addProcess(new Process(1, "P1", 3, 10, 0));  // Priority 3, Burst time 10, Arrival at time 0
+          scheduler.addProcess(new Process(2, "P2", 1, 6, 2));   // Priority 1, Burst time 6, Arrival at time 2
+          scheduler.addProcess(new Process(3, "P3", 4, 8, 4));   // Priority 4, Burst time 8, Arrival at time 4
+          scheduler.addProcess(new Process(4, "P4", 2, 9, 6));   // Priority 2, Burst time 9, Arrival at time 6
+          scheduler.addProcess(new Process(5, "P5", 5, 5, 8));   // Priority 5, Burst time 5, Arrival at time 8
+          scheduler.addProcess(new Process(6, "P6", 2, 7, 10));  // Priority 2, Burst time 7, Arrival at time 10
+          scheduler.addProcess(new Process(7, "P7", 3, 4, 12));  // Priority 3, Burst time 4, Arrival at time 12
+          scheduler.addProcess(new Process(8, "P8", 1, 10, 14)); // Priority 1, Burst time 10, Arrival at time 14
+          scheduler.addProcess(new Process(9, "P9", 4, 6, 16));  // Priority 4, Burst time 6, Arrival at time 16
+          scheduler.addProcess(new Process(10, "P10", 2, 5, 18)); // Priority 2, Burst time 5, Arrival at time 18
+
+          System.out.println("10 Processos criados com sucesso.\n");
+          System.out.println("Iniciando simulação com velocidade lenta para melhor observação...\n");
+
+          try {
+              Thread.sleep(2000); // Pause before starting simulation
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+
+          // Run simulation with time quantum and simulation speed (in milliseconds)
+          scheduler.simulate(1, 500); // Time quantum of 1, 500ms delay for visualization
+      }
+  }
