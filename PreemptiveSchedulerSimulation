@@ -1,10 +1,7 @@
-import java.util.Random;
-
 public class PreemptiveSchedulerSimulation {
     public static void main(String[] args) {
         // Cria o escalonador de CPU
         CPUScheduler scheduler = new CPUScheduler();
-        Random random = new Random();
 
         System.out.println("===== SIMULADOR DE ESCALONAMENTO PREEMPTIVO COM PRIORIDADE ESTÁTICA =====");
 
