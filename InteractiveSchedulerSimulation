@@ -1,0 +1,279 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class InteractiveSchedulerSimulation {
+    
+    private static final Scanner scanner = new Scanner(System.in);
+    private static CPUScheduler scheduler;
+    private static List<Process> predefinedProcesses;
+    private static int timeSlice = 1;
+    private static int simulationSpeed = 1000; // Default 1 second
+    
+    public static void main(String[] args) {
+        System.out.println("\n===== SIMULADOR INTERATIVO DE ESCALONAMENTO PREEMPTIVO COM PRIORIDADE ESTÁTICA =====");
+        System.out.println("Este simulador permite visualizar como funciona o escalonamento de processos com prioridade preemptiva");
+        System.out.println("Nota: Números MAIORES de prioridade indicam maior prioridade\n");
+        
+        inicializarSimulador();
+        
+        boolean executando = true;
+        while (executando) {
+            exibirMenu();
+            int opcao = lerOpcaoUsuario();
+            
+            switch (opcao) {
+                case 1:
+                    configurarParametros();
+                    break;
+                case 2:
+                    carregarProcessosPredefinidos();
+                    break;
+                case 3:
+                    criarProcessosManualmente();
+                    break;
+                case 4:
+                    iniciarSimulacao();
+                    break;
+                case 5:
+                    exibirInformacoesSimulador();
+                    break;
+                case 0:
+                    executando = false;
+                    System.out.println("Encerrando o simulador. Obrigado!");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        }
+        
+        scanner.close();
+    }
+    
+    private static void inicializarSimulador() {
+        scheduler = new CPUScheduler();
+        predefinedProcesses = new ArrayList<>();
+        
+        // Inicializar os processos pré-definidos (os mesmos do exemplo original)
+        predefinedProcesses.add(new Process(1, "P1", 3, 10, 0));   // Prioridade 3, tempo de burst 10, chegada no tempo 0
+        predefinedProcesses.add(new Process(2, "P2", 5, 6, 2));    // Prioridade 5, tempo de burst 6, chegada no tempo 2
+        predefinedProcesses.add(new Process(3, "P3", 2, 8, 4));    // Prioridade 2, tempo de burst 8, chegada no tempo 4
+        predefinedProcesses.add(new Process(4, "P4", 4, 9, 6));    // Prioridade 4, tempo de burst 9, chegada no tempo 6
+        predefinedProcesses.add(new Process(5, "P5", 1, 5, 8));    // Prioridade 1, tempo de burst 5, chegada no tempo 8
+        predefinedProcesses.add(new Process(6, "P6", 4, 7, 10));   // Prioridade 4, tempo de burst 7, chegada no tempo 10
+        predefinedProcesses.add(new Process(7, "P7", 3, 4, 12));   // Prioridade 3, tempo de burst 4, chegada no tempo 12
+        predefinedProcesses.add(new Process(8, "P8", 5, 10, 14));  // Prioridade 5, tempo de burst 10, chegada no tempo 14
+        predefinedProcesses.add(new Process(9, "P9", 2, 6, 16));   // Prioridade 2, tempo de burst 6, chegada no tempo 16
+        predefinedProcesses.add(new Process(10, "P10", 4, 5, 18)); // Prioridade 4, tempo de burst 5, chegada no tempo 18
+    }
+    
+    private static void exibirMenu() {
+        System.out.println("\n----- MENU PRINCIPAL -----");
+        System.out.println("1. Configurar parâmetros (time slice e velocidade)");
+        System.out.println("2. Carregar conjunto de processos pré-definidos");
+        System.out.println("3. Criar processos manualmente");
+        System.out.println("4. Iniciar simulação");
+        System.out.println("5. Exibir configurações atuais");
+        System.out.println("0. Sair");
+        System.out.print("Escolha uma opção: ");
+    }
+    
+    private static int lerOpcaoUsuario() {
+        try {
+            return Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            return -1; // Retorna opção inválida em caso de entrada não numérica
+        }
+    }
+    
+    private static void configurarParametros() {
+        System.out.println("\n----- CONFIGURAÇÃO DE PARÂMETROS -----");
+        
+        System.out.print("Digite o valor do time slice (atual: " + timeSlice + "): ");
+        try {
+            int novoTimeSlice = Integer.parseInt(scanner.nextLine());
+            if (novoTimeSlice > 0) {
+                timeSlice = novoTimeSlice;
+                System.out.println("Time slice configurado para: " + timeSlice);
+            } else {
+                System.out.println("Valor inválido. Time slice deve ser maior que 0.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Mantendo o valor atual.");
+        }
+        
+        System.out.print("Digite a velocidade da simulação em milissegundos (atual: " + simulationSpeed + "ms): ");
+        try {
+            int novaVelocidade = Integer.parseInt(scanner.nextLine());
+            if (novaVelocidade >= 0) {
+                simulationSpeed = novaVelocidade;
+                System.out.println("Velocidade configurada para: " + simulationSpeed + "ms");
+            } else {
+                System.out.println("Valor inválido. Velocidade deve ser maior ou igual a 0.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Mantendo o valor atual.");
+        }
+    }
+    
+    private static void carregarProcessosPredefinidos() {
+        System.out.println("\n----- CARREGANDO PROCESSOS PRÉ-DEFINIDOS -----");
+        
+        // Reinicializar o escalonador para limpar processos anteriores
+        scheduler = new CPUScheduler();
+        
+        // Adicionar todos os processos pré-definidos
+        for (Process processo : predefinedProcesses) {
+            scheduler.addProcess(processo);
+        }
+        
+        System.out.println("Processos carregados com sucesso!");
+        exibirProcessosCarregados();
+    }
+    
+    private static void criarProcessosManualmente() {
+        System.out.println("\n----- CRIAÇÃO MANUAL DE PROCESSOS -----");
+        
+        // Reinicializar o escalonador para limpar processos anteriores
+        scheduler = new CPUScheduler();
+        
+        System.out.print("Quantos processos deseja criar? ");
+        int quantidade;
+        try {
+            quantidade = Integer.parseInt(scanner.nextLine());
+            if (quantidade <= 0) {
+                System.out.println("Quantidade inválida. Operação cancelada.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Entrada inválida. Operação cancelada.");
+            return;
+        }
+        
+        for (int i = 1; i <= quantidade; i++) {
+            try {
+                System.out.println("\nProcesso #" + i);
+                
+                System.out.print("Nome do processo (ex: P" + i + "): ");
+                String nome = scanner.nextLine();
+                if (nome.trim().isEmpty()) nome = "P" + i;
+                
+                System.out.print("Prioridade (valor maior = maior prioridade): ");
+                int prioridade = Integer.parseInt(scanner.nextLine());
+                
+                System.out.print("Tempo de execução total (burst time): ");
+                int tempoExecucao = Integer.parseInt(scanner.nextLine());
+                if (tempoExecucao <= 0) {
+                    System.out.println("Tempo de execução inválido. Usando valor padrão 5.");
+                    tempoExecucao = 5;
+                }
+                
+                System.out.print("Tempo de chegada: ");
+                int tempoChegada = Integer.parseInt(scanner.nextLine());
+                if (tempoChegada < 0) {
+                    System.out.println("Tempo de chegada inválido. Usando valor padrão 0.");
+                    tempoChegada = 0;
+                }
+                
+                Process novoProcesso = new Process(i, nome, prioridade, tempoExecucao, tempoChegada);
+                scheduler.addProcess(novoProcesso);
+                
+                System.out.println("Processo " + nome + " adicionado com sucesso!");
+                
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada inválida. Processo não criado.");
+                i--; // Tenta novamente para este índice
+            }
+        }
+        
+        System.out.println("\nTodos os processos foram criados!");
+        exibirProcessosCarregados();
+    }
+    
+    private static void exibirProcessosCarregados() {
+        System.out.println("\n----- PROCESSOS CARREGADOS -----");
+        System.out.println("ID | Nome | Prioridade | Tempo Total | Tempo Chegada");
+        System.out.println("--------------------------------------------------");
+        
+        List<Process> processos = new ArrayList<>();
+        
+        // Como não temos acesso direto à lista de processos do scheduler,
+        // vamos usar uma representação visual simplificada dos processos adicionados
+        // Isto poderia ser aprimorado se tivermos um método de acesso à lista no CPUScheduler
+        System.out.println("Processos carregados no escalonador:");
+        for (Process p : scheduler.getProcesses()) {
+            System.out.printf("%2d | %-4s | %10d | %11d | %13d\n", 
+                    p.getId(), p.getName(), p.getPriority(), 
+                    p.getBurstTime(), p.getArrivalTime());
+        }
+    }
+    
+    private static void iniciarSimulacao() {
+        System.out.println("\n----- INICIANDO SIMULAÇÃO -----");
+        
+        // Verificar se existem processos carregados
+        if (scheduler.getProcesses().isEmpty()) {
+            System.out.println("Nenhum processo carregado! Por favor, carregue processos antes de iniciar a simulação.");
+            return;
+        }
+        
+        System.out.println("Parâmetros da simulação:");
+        System.out.println("- Time slice: " + timeSlice);
+        System.out.println("- Velocidade: " + simulationSpeed + "ms");
+        System.out.println("- Número de processos: " + scheduler.getProcesses().size());
+        
+        System.out.println("\nPressione ENTER para iniciar a simulação...");
+        scanner.nextLine();
+        
+        System.out.println("\n===== INICIANDO SIMULAÇÃO DO ESCALONADOR =====");
+        System.out.println("Observação: Números MAIORES de prioridade indicam maior prioridade");
+        
+        try {
+            Thread.sleep(1000); // Pausa de 1 segundo antes de iniciar
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        // Executar a simulação com os parâmetros configurados
+        scheduler.simulate(timeSlice, simulationSpeed);
+        
+        // Após a simulação, exibir estatísticas
+        exibirEstatisticas();
+    }
+    
+    private static void exibirEstatisticas() {
+        System.out.println("\n===== ESTATÍSTICAS DA SIMULAÇÃO =====");
+        
+        // Podemos adicionar estatísticas detalhadas aqui se o CPUScheduler fornecer esses dados
+        System.out.println("Todos os processos foram executados com sucesso!");
+        
+        // Exemplo de estatísticas que poderíamos mostrar:
+        // - Tempo médio de espera
+        // - Tempo médio de processamento
+        // - Número de preempções realizadas
+        // - Utilização da CPU
+        
+        System.out.println("\nPressione ENTER para voltar ao menu principal...");
+        scanner.nextLine();
+    }
+    
+    private static void exibirInformacoesSimulador() {
+        System.out.println("\n----- CONFIGURAÇÕES ATUAIS DO SIMULADOR -----");
+        System.out.println("Time slice: " + timeSlice);
+        System.out.println("Velocidade da simulação: " + simulationSpeed + "ms");
+        System.out.println("Número de processos carregados: " + 
+                (scheduler.getProcesses().isEmpty() ? "0" : scheduler.getProcesses().size()));
+        
+        if (!scheduler.getProcesses().isEmpty()) {
+            exibirProcessosCarregados();
+        }
+        
+        System.out.println("\nExplicação dos parâmetros:");
+        System.out.println("- Time slice: Unidade de tempo que cada processo pode executar antes de ser interrompido");
+        System.out.println("- Velocidade: Tempo em milissegundos para cada unidade de simulação (quanto menor, mais rápido)");
+        System.out.println("- Prioridade: Valor que determina a importância do processo (maior = mais prioritário)");
+        
+        System.out.println("\nPressione ENTER para voltar ao menu principal...");
+        scanner.nextLine();
+    }
+}

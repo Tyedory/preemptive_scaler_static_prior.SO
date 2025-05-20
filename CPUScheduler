@@ -171,6 +171,10 @@ public class CPUScheduler {
     public List<SchedulingEvent> getEvents() {
         return events;
     }
+    
+    public List<Process> getProcesses() {
+        return processes;
+    }
 
     public static class SchedulingEvent {
         private int time;
